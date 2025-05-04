@@ -18,6 +18,15 @@ class XYMD02():
 		self.humidity_correction = 0
 		
 		self.__get_param()
+		
+	def get_parameter(self):
+		return [self.address, self.baudrate, self.temperature_correction, self.humidity_correction]
+		
+	def get_data(self):
+		data = self.__get_data(self.address, 0x04, 0x0001, 0x0002)
+		temperature = data[0] / 10
+		humidity = data[1] / 10
+		return [temperature, humidity]
 
 	def get_address(self):
 		return self.address

@@ -23,15 +23,20 @@ class XYMD02(ModbusSerialClient):
 		
 		self.__get_param()
 		self.connect()
-				
-	def __get_param(self):
-		result = self.read_holding_registers(257, count=4, slave=self.address)
-		if not result.isError():
-			self.address = result.registers[0]
-			self.baudrate = result.registers[1]
-			self.temperature_correction = result.registers[2]
-			self.humidity_correction = result.registers[3]
 
+	def get_parameter(self):
+		return [self.address, self.baudrate, self.temperature_correction, self.humidity_correction]
+		
+	def get_data(self):
+		result = self.read_input_registers(1, count=2, slave=self.address)
+		
+		if not result.isError():
+			temperature = result.registers[0] / 10
+			humidity = result.registers[1] / 10
+			return [temperature, humidity]
+		else:
+			print("Can't read data. Error:", result)
+		
 	def get_address(self):
 		return self.address
 		
@@ -65,3 +70,12 @@ class XYMD02(ModbusSerialClient):
 	def print_humidity(self):
 		humidity = self.get_humidity()
 		print(f"Humidity: {humidity} \u00B1 {self.humidity_correction} %")
+		
+	def __get_param(self):
+		result = self.read_holding_registers(257, count=4, slave=self.address)
+		if not result.isError():
+			self.address = result.registers[0]
+			self.baudrate = result.registers[1]
+			self.temperature_correction = result.registers[2]
+			self.humidity_correction = result.registers[3]
+

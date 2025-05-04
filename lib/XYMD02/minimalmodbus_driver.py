@@ -29,14 +29,15 @@ class XYMD02(minimalmodbus.Instrument):
 		self.humidity_correction = 0
 		
 		self.__get_param()
+
+	def get_parameter(self):
+		return [self.address, self.baudrate, self.temperature_correction, self.humidity_correction]
 		
-	def __get_param(self):
-		[address, baudrate, temp_correction, humid_correction] = self.read_registers(257, 4, functioncode=3)
-		
-		self.address = address
-		self.baudrate = baudrate
-		self.temperature_correction = temp_correction
-		self.humidity_correction = humid_correction
+	def get_data(self):
+		data = self.read_registers(1, 2, functioncode=4)		
+		temperature = data[0] / 10
+		humidity = data[1] / 10
+		return [temperature, humidity]
 
 	def get_address(self):
 		return self.address
@@ -67,3 +68,11 @@ class XYMD02(minimalmodbus.Instrument):
 	def print_humidity(self):
 		humidity = self.get_humidity()
 		print(f"Humidity: {humidity} \u00B1 {self.humidity_correction} %")
+
+	def __get_param(self):
+		[address, baudrate, temp_correction, humid_correction] = self.read_registers(257, 4, functioncode=3)
+		
+		self.address = address
+		self.baudrate = baudrate
+		self.temperature_correction = temp_correction
+		self.humidity_correction = humid_correction
