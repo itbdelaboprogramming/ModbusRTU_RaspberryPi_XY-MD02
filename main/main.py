@@ -19,7 +19,7 @@ sensor1 = serial_driver.XYMD02(
 data_sensor = {}
 
 # mqtt properties
-broker = '192.168.1.100'
+broker = input("Enter your broker ip: ")
 port = 1883
 topic = "raspberry/data_sensor"
 # Generate a Client ID with the publish prefix.
