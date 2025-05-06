@@ -50,6 +50,7 @@ pip install minimalmodbus
 pip install pyserial
 pip install paho-mqtt
 pip install mysql-connector-python
+pip install matplotlib
 
 # Deactivate virtual environment
 deactivate
