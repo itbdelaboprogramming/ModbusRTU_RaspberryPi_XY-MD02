@@ -9,6 +9,9 @@ import os
 import signal
 import sys
 import random
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from collections import deque
 
 # Initialize sensor
 sensor1 = serial_driver.XYMD02(
@@ -82,6 +85,11 @@ text = {
     'humidity': tk.StringVar(),
 }
 
+max_points = 30  # number of points to show on the graph
+temp_data = deque([0.0]*max_points, maxlen=max_points)
+humid_data = deque([0.0]*max_points, maxlen=max_points)
+timestamps = deque([""]*max_points, maxlen=max_points)
+
 # Initialize value
 text['address'].set(f": {sensor1.get_address()}")
 text['baudrate'].set(f": {sensor1.get_baudrate()}")
@@ -89,6 +97,18 @@ text['baudrate'].set(f": {sensor1.get_baudrate()}")
 # Frame creation
 frame = tk.Frame(root)
 frame.pack(padx=20, pady=20)
+
+# Create Matplotlib figure
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(5, 4), dpi=100)
+fig.tight_layout(pad=3.0)
+ax1.set_title("Temperature (\u00b0C)")
+ax2.set_title("Humidity (%)")
+ax1.set_ylim(0, 50)
+ax2.set_ylim(0, 100)
+
+# Embed in Tkinter
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.get_tk_widget().pack(padx=20, pady=10)
 
 rows = ['address', 'baudrate', 'timestamp', 'temperature', 'humidity']
 labels_left = {
@@ -208,9 +228,37 @@ def update_gui():
         humidity_correction = data['humidity_correction']
 
         text['timestamp'].set(f": {timestamp}")
-        #text['timestamp'].set(f": {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         text['temperature'].set(f": {temperature:.2f} \u00B1 {temperature_correction:.2f} \u00b0C")
         text['humidity'].set(f": {humidity:.2f} \u00B1 {humidity_correction:.2f} %")
+        
+        # Append new data
+        temp_data.append(temperature)
+        humid_data.append(humidity)
+        timestamps.append(datetime.now().strftime("%H:%M:%S"))
+
+        # Clear and re-plot
+        ax1.clear()
+        ax2.clear()
+        ax1.plot(list(timestamps), list(temp_data), color='red', label='Temperature')
+        ax2.plot(list(timestamps), list(humid_data), color='blue', label='Humidity')
+        ax1.set_ylim(20, 40)
+        ax2.set_ylim(40, 90)
+        ax1.set_title("Temperature (\u00b0C)")
+        ax2.set_title("Humidity (%)")
+        
+        n = 10  # show every 5th label
+        # For Temperature plot
+        ax1.set_xticks(range(len(timestamps)))
+        ax1.set_xticklabels([label if i % n == 0 else "" for i, label in enumerate(timestamps)], rotation=45)
+        # For Humidity plot
+        ax2.set_xticks(range(len(timestamps)))
+        ax2.set_xticklabels([label if i % n == 0 else "" for i, label in enumerate(timestamps)], rotation=45)
+        
+        ax1.tick_params(axis='x', rotation=45)
+        ax2.tick_params(axis='x', rotation=45)
+
+        canvas.draw()
+
     except Exception as e:
         text['timestamp'].set(f": Error")
         text['temperature'].set(f": Error")
